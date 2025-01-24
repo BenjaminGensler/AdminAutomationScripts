@@ -4,6 +4,7 @@
 
 # List of application names to uninstall
 $appNames = @(
+    "Microsoft 365 - en-us",
     "Aplicaciones de Microsoft 365 para empresas - es-es",
     "Aplicaciones de Microsoft 365 para empresas - es-mx",
     "Microsoft 365 Apps for enterprise - en-gb",
@@ -28,8 +29,11 @@ $appNames = @(
     "Microsoft OneNote - th-th",
     "Microsoft OneNote - zh-cn",
     "Microsoft OneNote - zh-tw",
+    "HP Notifications",
     "HP Documentation",
-    "HP Notifications"
+    "HP presence video",
+    "HP Connection Optimizer",
+    "Poly Lens"
 )
 
 # Registry key paths for installed programs to uninstall
