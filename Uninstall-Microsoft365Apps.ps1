@@ -1,6 +1,6 @@
 # Script to help uninstall Microsoft 365 Apps for enterprise and OneNote from Windows devices
 # These applications are usually installed immediately after a fresh Windows installation
-# This script requires administrative privileges to uninstall programs and minimal user interaction (Yes/No and Close buttons)
+# This script requires administrative privileges to uninstall programs and little to no user interaction (Per previous testing : Some user interaction may be required with Yes/No for uninstall)
 
 # List of application names to uninstall
 $appNames = @(
@@ -53,7 +53,7 @@ $programs = foreach ($key in $uninstallKeys) {
     }
 }
 
-# Output the list of programs (Uncomment if you want to see list of installed programs)
+# Output the list of programs (Uncomment if you want to see the list of installed programs)
 # $programs | Format-Table -AutoSize
 
 
@@ -69,18 +69,29 @@ function Uninstall-Program {
     # If the program is found, uninstall it if uninstall string is available
     if ($program) {
         if ($program.UninstallString) {
-            Write-Host "Uninstalling $programName..."
+            # Uncomment for Testing
+            # Write-Host "Uninstalling $programName..."
+
+            # Modify the uninstall string for ClickToRun applications
+            $uninstallString = $program.UninstallString
+            if ($uninstallString -match "ClickToRun") {
+                $uninstallString += " DisplayLevel=False"
+            }
 
             # Starts the uninstall process through command prompt, waits for the current uninstall to finish before going to the next one
-            Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $program.UninstallString -Wait -NoNewWindow
-            Write-Host "$programName has been uninstalled."
-        } else {
-            Write-Host "No uninstall string found for $programName."
-        }
-    # If the program is not found, display a message
-    } else {
-        Write-Host "Program $programName not found."
-    }
+            Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $uninstallString -Wait -NoNewWindow
+            # Uncomment for Testing
+            # Write-Host "$programName has been uninstalled."
+        } 
+        # Uncomment for Testing
+        # else {
+        #     Write-Host "No uninstall string found for $programName."
+        # }
+    } 
+    # Uncomment for Testing
+    # else {
+    #     Write-Host "Program $programName not found."
+    # }
 }
 
 
@@ -88,4 +99,3 @@ function Uninstall-Program {
 foreach ($app in $appNames){
     Uninstall-Program -programName $app
 }
-
