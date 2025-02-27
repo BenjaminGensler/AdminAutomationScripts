@@ -21,6 +21,9 @@
 
 ## Uninstall-Microsoft365Apps
 A PowerShell script to uninstall Microsoft 365 Apps for enterprise and OneNote from Windows devices.
+Known Bugs:
+- If run through a package editor the following applications may fail to uninstall: "Microsoft 365 Apps 企業版 - zh-tw", "Microsoft 365 企业应用版 - zh-cn", and "엔터프라이즈용 Microsoft 365 앱 - ko-kr"
+   (Current workaround: Run the file through powershell and let it run until script ends. )
 
 
 ## clear-AllUserProfiles
