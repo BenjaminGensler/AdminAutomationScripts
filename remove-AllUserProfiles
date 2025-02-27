@@ -1,0 +1,52 @@
+# Benjamin Gensler
+# 2/27/25
+# Removes all user profiles from a computer includes their files and registry key
+# Note: Below is a value called $excludedUsers. If you would like to avoid any users from being removed such as domain/ local admins then fill in the value (e.g. @("admin", "localAdmin", "KingBob") )
+
+# Function to remove a user profile
+function removeUser {
+        param (
+            [string]$currentTestUser
+        )
+        # Added try/catch block to prevent script from stopping if an error occurs
+        try{
+                Write-Host "Removing user profile $currentTestUser..."
+
+                # Removes the user from both the registry and the user profile itself (Similar to removing in Advanced System Settings)
+                Get-CimInstance -ClassName Win32_UserProfile | Where-Object { $_.LocalPath -like "*$currentTestUser*" } | Remove-CimInstance -Confirm:$false
+                
+                Write-Host "User profile $currentTestUser removed successfully."
+                
+                # wait to ensure the removal process completes (Remove-CimInstance is asynchronous)
+                while (Get-CimInstance -ClassName Win32_UserProfile | Where-Object { $_.LocalPath -like "*$currentTestUser*" }) {
+                        Write-Host "Waiting for user profile $currentTestUser to be removed..."
+                        Start-Sleep -Seconds 20
+                }
+        }
+        catch{
+                break
+        }
+        
+}
+
+
+# Get installed applications from the registry : Where-Object { $_.PSObject.Properties['Sid'] -ne $null } |
+$currentUsers = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*" | Select-Object ProfileImagePath 
+
+# Extract folder names from ProfileImagePath
+$userFolders = $currentUsers | Select-Object @{Name='UserFolder';Expression={Split-Path $_.ProfileImagePath -Leaf}}
+
+# Remove sensitive accounts from the list (localService, networkService, etc.)
+$userFolders = $userFolders | Where-Object { $_.UserFolder -notmatch "^(systemprofile|LocalService|NetworkService)$" }
+
+# List of users to exclude from deletion (Input desired users to exclude if any (e.g. domain / local admin))
+$excludedUsers = @()
+
+# Remove the user folders that are not the domain admin user
+foreach ($user in $userFolders) {
+        Write-Host "Checking user profile: $($user.UserFolder)"
+        if($excludedUsers -notcontains $user.UserFolder) {
+                Write-Host "Removing user profile: $($user.UserFolder)"
+                removeUser($user.UserFolder)
+        }
+}
