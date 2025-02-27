@@ -28,12 +28,7 @@ $appNames = @(
     "Microsoft OneNote - pt-br",
     "Microsoft OneNote - th-th",
     "Microsoft OneNote - zh-cn",
-    "Microsoft OneNote - zh-tw",
-    "HP Notifications",
-    "HP Documentation",
-    "HP presence video",
-    "HP Connection Optimizer",
-    "Poly Lens"
+    "Microsoft OneNote - zh-tw"
 )
 
 # Registry key paths for installed programs to uninstall
