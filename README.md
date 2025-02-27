@@ -1,5 +1,4 @@
-# Uninstall-Microsoft365Apps
-A PowerShell script to uninstall Microsoft 365 Apps for enterprise and OneNote from Windows devices.
+# Powershell Script Tools for Admins by Admins
 
 ## Prerequisites
 
@@ -17,3 +16,13 @@ A PowerShell script to uninstall Microsoft 365 Apps for enterprise and OneNote f
    - open powershell
    - change directory to install location (**cd 'File location'**)
    - in powershell type **.\Uninstall-Microsoft365Apps.ps1**
+
+# Scripts
+
+## Uninstall-Microsoft365Apps
+A PowerShell script to uninstall Microsoft 365 Apps for enterprise and OneNote from Windows devices.
+
+
+## clear-AllUserProfiles
+A Powershell script to remove all user accounts from a device. Useful for re-provisioning devices by cleaning out old user profiles.
+
