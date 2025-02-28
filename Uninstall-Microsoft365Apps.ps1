@@ -1,9 +1,12 @@
 # Script to help uninstall Microsoft 365 Apps for enterprise and OneNote from Windows devices
 # These applications are usually installed immediately after a fresh Windows installation
-# This script requires administrative privileges to uninstall programs and little to no user interaction (Per previous testing : Some user interaction may be required with Yes/No for uninstall)
+# This script requires administrative privileges to uninstall programs (No interaction required after running the script)
 
 # List of application names to uninstall
 $appNames = @(
+    "Microsoft 365* - zh-tw",
+    "Microsoft 365* - zh-cn",
+    "*Microsoft 365* - ko-kr",
     "Microsoft 365 - en-us",
     "Aplicaciones de Microsoft 365 para empresas - es-es",
     "Aplicaciones de Microsoft 365 para empresas - es-mx",
@@ -14,9 +17,6 @@ $appNames = @(
     "Microsoft 365 Apps for enterprise - ja-jp",
     "Microsoft 365 Apps for enterprise - th-th",
     "Microsoft 365 Apps para Grandes Empresas - pt-br",
-    "Microsoft 365 Apps 企業版 - zh-tw",
-    "Microsoft 365 企业应用版 - zh-cn",
-    "엔터프라이즈용 Microsoft 365 앱 - ko-kr",
     "Microsoft OneNote - en-gb",
     "Microsoft OneNote - en-us",
     "Microsoft OneNote - es-es",
@@ -39,6 +39,10 @@ $uninstallKeys = @(
 
 # Get a list of installed programs from the registry
 $programs = foreach ($key in $uninstallKeys) {
+    # Check if Path exists
+    if (-not (Test-Path $key)) {
+        continue
+    }
     Get-ItemProperty -Path "$key\*" | ForEach-Object {
         # Creates a custom object with only necessary properties (Name and UninstallString)
         [PSCustomObject]@{
@@ -48,7 +52,7 @@ $programs = foreach ($key in $uninstallKeys) {
     }
 }
 
-# Output the list of programs (Uncomment if you want to see the list of installed programs)
+# Output the list of programs (Uncomment if you want to see list of installed programs)
 # $programs | Format-Table -AutoSize
 
 
@@ -60,33 +64,30 @@ function Uninstall-Program {
     )
 
     # Find the program in the list of installed programs (Gets both name and uninstall string)
-    $program = $programs | Where-Object { $_.Name -eq $programName }
+    $program = $programs | Where-Object { $_.Name -like $programName }
     # If the program is found, uninstall it if uninstall string is available
     if ($program) {
-        if ($program.UninstallString) {
-            # Uncomment for Testing
-            # Write-Host "Uninstalling $programName..."
+        foreach ($prog in $program) {
+            if ($program.UninstallString) {
+                Write-Host "Uninstalling $($prog.Name)..."
 
-            # Modify the uninstall string for ClickToRun applications
-            $uninstallString = $program.UninstallString
-            if ($uninstallString -match "ClickToRun") {
-                $uninstallString += " DisplayLevel=False"
+                # Modify the uninstall string for ClickToRun applications
+                $uninstallString = $prog.UninstallString
+                if ($uninstallString -match "ClickToRun") {
+                    $uninstallString += " DisplayLevel=False"
+                }
+
+                # Starts the uninstall process through command prompt, waits for the current uninstall to finish before going to the next one
+                Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $uninstallString -Wait -NoNewWindow
+                Write-Host "$($prog.Name) has been uninstalled."
+            } else {
+                Write-Host "No uninstall string found for $($prog.Name)."
             }
-
-            # Starts the uninstall process through command prompt, waits for the current uninstall to finish before going to the next one
-            Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $uninstallString -Wait -NoNewWindow
-            # Uncomment for Testing
-            # Write-Host "$programName has been uninstalled."
-        } 
-        # Uncomment for Testing
-        # else {
-        #     Write-Host "No uninstall string found for $programName."
-        # }
-    } 
-    # Uncomment for Testing
-    # else {
-    #     Write-Host "Program $programName not found."
-    # }
+        }
+    # If the program is not found, display a message
+    } else {
+        Write-Host "Program $programName not found."
+    }
 }
 
 
