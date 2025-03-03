@@ -34,11 +34,11 @@ Known Bugs:
 ## Query-InstalledApps
 A Powershell script to check for a specific list of installed applications. Useful when needing to determine what applications on a given device are installed based on the provided pool of queried apps.
 
-# Before Use:
+### Before Use:
 - Before using this program open it up and alter the variable $applicationsToCheck. Change the applications names to any desired applications names on your list. ( I would advise to keep them short to avoid missing the application you would like. For Example: "Workspace for Business" is the name of the application the user sees but is called through the applications display Name "Business Workspace". This will not be caught in the query. To avoid this just do "Business" or "Workspace". 
 - Also make sure to change the $path variable to your desired Path
 
-# If you would like to query the names of apps then use the follow commands:
+### If you would like to query the names of apps then use the follow commands:
 
 $uninstallKeys = @(
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
