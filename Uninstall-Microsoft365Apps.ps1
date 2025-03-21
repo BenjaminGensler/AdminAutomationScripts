@@ -1,12 +1,10 @@
+# Created by: Benjamin Gensler
 # Script to help uninstall Microsoft 365 Apps for enterprise and OneNote from Windows devices
 # These applications are usually installed immediately after a fresh Windows installation
 # This script requires administrative privileges to uninstall programs (No interaction required after running the script)
 
 # List of application names to uninstall
 $appNames = @(
-    "Microsoft 365* - zh-tw",
-    "Microsoft 365* - zh-cn",
-    "*Microsoft 365* - ko-kr",
     "Microsoft 365 - en-us",
     "Aplicaciones de Microsoft 365 para empresas - es-es",
     "Aplicaciones de Microsoft 365 para empresas - es-mx",
@@ -17,6 +15,9 @@ $appNames = @(
     "Microsoft 365 Apps for enterprise - ja-jp",
     "Microsoft 365 Apps for enterprise - th-th",
     "Microsoft 365 Apps para Grandes Empresas - pt-br",
+    "Microsoft 365 Apps*- zh-tw",
+    "Microsoft 365*- zh-cn",
+    "*Microsoft 365*- ko-kr",
     "Microsoft OneNote - en-gb",
     "Microsoft OneNote - en-us",
     "Microsoft OneNote - es-es",
@@ -64,25 +65,23 @@ function Uninstall-Program {
     )
 
     # Find the program in the list of installed programs (Gets both name and uninstall string)
-    $program = $programs | Where-Object { $_.Name -like $programName }
+    $program = $programs | Where-Object { $_.Name -like "$programName" }
     # If the program is found, uninstall it if uninstall string is available
     if ($program) {
-        foreach ($prog in $program) {
-            if ($program.UninstallString) {
-                Write-Host "Uninstalling $($prog.Name)..."
+        if ($program.UninstallString) {
+            Write-Host "Uninstalling $programName..."
 
-                # Modify the uninstall string for ClickToRun applications
-                $uninstallString = $prog.UninstallString
-                if ($uninstallString -match "ClickToRun") {
-                    $uninstallString += " DisplayLevel=False"
-                }
-
-                # Starts the uninstall process through command prompt, waits for the current uninstall to finish before going to the next one
-                Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $uninstallString -Wait -NoNewWindow
-                Write-Host "$($prog.Name) has been uninstalled."
-            } else {
-                Write-Host "No uninstall string found for $($prog.Name)."
+            # Create the uninstall string for ClickToRun applications
+            $uninstallString = $program.UninstallString
+            if ($uninstallString -match "ClickToRun") {
+                $uninstallString += " DisplayLevel=False"
             }
+
+            # Starts the uninstall process through command prompt, waits for the current uninstall to finish before going to the next one
+            Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $uninstallString -Wait -NoNewWindow
+            Write-Host "$programName has been uninstalled."
+        } else {
+            Write-Host "No uninstall string found for $programName."
         }
     # If the program is not found, display a message
     } else {
