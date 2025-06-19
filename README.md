@@ -8,6 +8,7 @@
 
 ## Usage
 
+( Ex/ Using `Uninstall-Microsoft365Apps.ps1` )
 1. Clone the repository or download the script file `Uninstall-Microsoft365Apps.ps1`.
 2. Open PowerShell with administrative privileges.
 3. Navigate to the directory where the script is located.
@@ -24,6 +25,19 @@
    - Save and run the script on the desired devices.
 
 # Scripts
+
+## Get-EmployeeLogonHours
+A universal Powershell script to collect all AD users allowed logonhours and convert them into a readable .CSV format for Saturday - Sunday. (Filtering allowed based on instructional changes and self made change)
+
+### Usage
+ - Must be ran on a device that has access to query Active Directory (like a domain controller)
+ - Timezone on the machine must be set up properly (The logonHours AD variable uses a binary format based on GMT time. To get the correct times the script needs to pull your current timezone to factor in the difference)
+
+### Before Use
+Please read the instructions in the file `Get-EmployeeLogonHours.ps1` 's comments at the top. These will advise you on lines to uncomment and change for better resulting reports. This includes the file location where you would the report to be saved to as well as the use of the $filter value for Group Names (member of groups), Department, DisplayName (specific user), and preferred logon Hours. (Please read  the instructions carefully.)
+
+> [!WARNING]
+> Please avoid making changes past the $filter variable as it will likely cause incorrect resulting data.
 
 ## Uninstall-Microsoft365Apps
 A PowerShell script to uninstall Microsoft 365 Apps for enterprise and OneNote from Windows devices. Useful for freeing up space on your device from extra language packages that are downloaded onto your computer during the provisioning process.
