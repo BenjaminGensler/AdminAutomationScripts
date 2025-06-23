@@ -19,7 +19,7 @@
 
 # 5. Logon hours filters (if you want to exclude users based on their logon hours)
 # Uncomment lines 39 and change the logon hours condition in the $filter variable to exclude users based on their logon hours. You can modify the condition to suit your needs. Read more about this on line 36
-
+# 6. Regular hours settings - Change the values $startingtime and $endingtime to the expected hours. This way users who have special logon access on monday for an additional hour but has a regular 9-5 hour access the rest of the week will only show the times for monday and 'regular hours' the rest of the time
 $fileSaveLocation = "Desktop" # Please change this to the desired file location where you want to save the CSV file
 
 # # Get the group name (Please change group name example if desired to use this)
@@ -39,6 +39,10 @@ $filter = {
     # (($_.logonHours | ForEach-Object { [Convert]::ToString($_, 2).PadLeft(8, '0') }) -join "") -ne "000000000000000000000000000000001111111000000001000000001111111000000001000000001111111000000001000000001111111000000001000000001111111000000001000000000000000000000000" -and
     $_.logonHours -ne $null
 }
+
+#Time zone limits
+$startingTime = 9
+$endingTime = 17 # Essentially 5pm in military time
 
 # Get the current time zone
 $timeZone = Get-TimeZone
@@ -80,13 +84,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits = -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring(($startingPosition + 8 + $collectionValue1) % 168, $collectionValue2)
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -95,13 +97,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring(($startingPosition + 8 + $collectionValue1) % 168, $collectionValue2) # Second 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -110,7 +110,6 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Third 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
@@ -120,49 +119,37 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $startingPosition += 8 # Move the starting position forward by 8
 
 
-                # Write-Output "Char array: $charArray"
                 # Find the first and last positions of '1'
                 $firstOne = $resultingDigits.IndexOf('1') # Position of the first '1'
                 $lastOne = $resultingDigits.LastIndexOf('1') # Position of the last '1'
 
-                # Write-Output "First '1' Position: $firstOne"
-                # Write-Output "Last '1' Position: $lastOne"
-                # Write-Output "Starting position at end: $startingPosition"
 
                 # Format the allowed time range
-                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq 7 -and $lastOne -eq 17))) {
+                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq $startingTime -and $lastOne -eq $endingTime))) {
                     $lastOne = $lastOne + 1 # Adjust lastOne to include the last '1'
                     $allowedTime = "$firstOne AM - $lastOne PM"
-                } elseif ($firstOne -eq 7 -and $lastOne -eq 17) {
+                } elseif ($firstOne -eq $startingTime -and $lastOne -eq $endingTime) {
                     $allowedTime = "Regular Hours"
                 } else {
                     $allowedTime = " - " # No valid time range found
                 }
                 $allowedTime
-                # $resultingDigits
             }
         }}, @{Name="Monday"; Expression={
             if ($_.logonHours) {
                 $decodedHours = ($_.logonHours | ForEach-Object { [Convert]::ToString($_, 2).PadLeft(8, '0') }) -join ""
                 # Write-Output "Starting position before set: $startingPosition"
                 $startingPosition =($startingPosition + $daysOfWeek["Monday"]) % 168 # Calculate the starting position for Monday
-                # Write-Output "Resulting Digits: $startingPosition"
-                # Write-Output "Starting position after set: $startingPosition"
-                # Write-output "Collection values: $collectionValue1, $collectionValue2"
-                # Write-Output "Difference: $difference"
-                # Write-Output "Decoded Hours: $decodedHours"
 
                 $firstSegment = $decodedHours.Substring($startingPosition, $collectionValue1)
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits = -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2)
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -171,13 +158,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Second 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -186,7 +171,6 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Third 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
@@ -196,26 +180,21 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $startingPosition += 8 # Move the starting position forward by 8
 
 
-                # Write-Output "Char array: $charArray"
                 # Find the first and last positions of '1'
                 $firstOne = $resultingDigits.IndexOf('1') # Position of the first '1'
                 $lastOne = $resultingDigits.LastIndexOf('1') # Position of the last '1'
 
-                # Write-Output "First '1' Position: $firstOne"
-                # Write-Output "Last '1' Position: $lastOne"
-                # Write-Output "Starting position at end: $startingPosition"
 
                 # Format the allowed time range
-                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq 7 -and $lastOne -eq 17))) {
+                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq $startingTime -and $lastOne -eq $endingTime))) {
                     $lastOne = $lastOne + 1 # Adjust lastOne to include the last '1'
                     $allowedTime = "$firstOne AM - $lastOne PM"
-                } elseif ($firstOne -eq 7 -and $lastOne -eq 17) {
+                } elseif ($firstOne -eq $startingTime -and $lastOne -eq $endingTime) {
                     $allowedTime = "Regular Hours"
                 } else {
                     $allowedTime = " - " # No valid time range found
                 }
                 $allowedTime
-                # $resultingDigits
             }
         }}, @{Name="Tuesday"; Expression={
             if ($_.logonHours) {
@@ -228,13 +207,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits = -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2)
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -243,13 +220,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Second 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -258,7 +233,6 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Third 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
@@ -268,26 +242,21 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $startingPosition += 8 # Move the starting position forward by 8
 
 
-                # Write-Output "Char array: $charArray"
                 # Find the first and last positions of '1'
                 $firstOne = $resultingDigits.IndexOf('1') # Position of the first '1'
                 $lastOne = $resultingDigits.LastIndexOf('1') # Position of the last '1'
 
-                # Write-Output "First '1' Position: $firstOne"
-                # Write-Output "Last '1' Position: $lastOne"
-                # Write-Output "Starting position at end: $startingPosition"
 
                 # Format the allowed time range
-                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq 7 -and $lastOne -eq 17))) {
+                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq $startingTime -and $lastOne -eq $endingTime))) {
                     $lastOne = $lastOne + 1 # Adjust lastOne to include the last '1'
                     $allowedTime = "$firstOne AM - $lastOne PM"
-                } elseif ($firstOne -eq 7 -and $lastOne -eq 17) {
+                } elseif ($firstOne -eq $startingTime -and $lastOne -eq $endingTime) {
                     $allowedTime = "Regular Hours"
                 } else {
                     $allowedTime = " - " # No valid time range found
                 }
                 $allowedTime
-                # $resultingDigits
             }
         }}, @{Name="Wednesday"; Expression={
             if ($_.logonHours) {
@@ -301,13 +270,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits = -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2)
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -316,13 +283,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Second 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -331,7 +296,6 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Third 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
@@ -341,26 +305,20 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $startingPosition += 8 # Move the starting position forward by 8
 
 
-                # Write-Output "Char array: $charArray"
                 # Find the first and last positions of '1'
                 $firstOne = $resultingDigits.IndexOf('1') # Position of the first '1'
                 $lastOne = $resultingDigits.LastIndexOf('1') # Position of the last '1'
 
-                # Write-Output "First '1' Position: $firstOne"
-                # Write-Output "Last '1' Position: $lastOne"
-                # Write-Output "Starting position at end: $startingPosition"
-
                 # Format the allowed time range
-                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq 7 -and $lastOne -eq 17))) {
+                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq $startingTime -and $lastOne -eq $endingTime))) {
                     $lastOne = $lastOne + 1 # Adjust lastOne to include the last '1'
                     $allowedTime = "$firstOne AM - $lastOne PM"
-                } elseif ($firstOne -eq 7 -and $lastOne -eq 17) {
+                } elseif ($firstOne -eq $startingTime -and $lastOne -eq $endingTime) {
                     $allowedTime = "Regular Hours"
                 } else {
                     $allowedTime = " - " # No valid time range found
                 }
                 $allowedTime
-                # $resultingDigits
             }
         }}, @{Name="Thursday"; Expression={
             if ($_.logonHours) {
@@ -374,13 +332,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits = -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2)
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -389,13 +345,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Second 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -404,7 +358,6 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Third 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
@@ -414,26 +367,21 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $startingPosition += 8 # Move the starting position forward by 8
 
 
-                # Write-Output "Char array: $charArray"
                 # Find the first and last positions of '1'
                 $firstOne = $resultingDigits.IndexOf('1') # Position of the first '1'
                 $lastOne = $resultingDigits.LastIndexOf('1') # Position of the last '1'
 
-                # Write-Output "First '1' Position: $firstOne"
-                # Write-Output "Last '1' Position: $lastOne"
-                # Write-Output "Starting position at end: $startingPosition"
 
                 # Format the allowed time range
-                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq 7 -and $lastOne -eq 17))) {
+                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq $startingTime -and $lastOne -eq $endingTime))) {
                     $lastOne = $lastOne + 1 # Adjust lastOne to include the last '1'
                     $allowedTime = "$firstOne AM - $lastOne PM"
-                } elseif ($firstOne -eq 7 -and $lastOne -eq 17) {
+                } elseif ($firstOne -eq $startingTime -and $lastOne -eq $endingTime) {
                     $allowedTime = "Regular Hours"
                 } else {
                     $allowedTime = " - " # No valid time range found
                 }
                 $allowedTime
-                # $resultingDigits
             }
         }}, @{Name="Friday"; Expression={
             if ($_.logonHours) {
@@ -447,13 +395,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits = -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2)
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -462,13 +408,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Second 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -477,7 +421,6 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2) # Third 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
@@ -487,26 +430,21 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $startingPosition += 8 # Move the starting position forward by 8
 
 
-                # Write-Output "Char array: $charArray"
                 # Find the first and last positions of '1'
                 $firstOne = $resultingDigits.IndexOf('1') # Position of the first '1'
                 $lastOne = $resultingDigits.LastIndexOf('1') # Position of the last '1'
 
-                # Write-Output "First '1' Position: $firstOne"
-                # Write-Output "Last '1' Position: $lastOne"
-                # Write-Output "Starting position at end: $startingPosition"
 
                 # Format the allowed time range
-                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq 7 -and $lastOne -eq 17))) {
+                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq $startingTime -and $lastOne -eq $endingTime))) {
                     $lastOne = $lastOne + 1 # Adjust lastOne to include the last '1'
                     $allowedTime = "$firstOne AM - $lastOne PM"
-                } elseif ($firstOne -eq 7 -and $lastOne -eq 17) {
+                } elseif ($firstOne -eq $startingTime -and $lastOne -eq $endingTime) {
                     $allowedTime = "Regular Hours"
                 } else {
                     $allowedTime = " - " # No valid time range found
                 }
                 $allowedTime
-                # $resultingDigits
             }
         }}, @{Name="Saturday"; Expression={
             if ($_.logonHours) {
@@ -517,13 +455,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits = -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring($startingPosition + 8 + $collectionValue1, $collectionValue2)
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -532,13 +468,11 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring(($startingPosition + 8 + $collectionValue1) % 168, $collectionValue2) # Second 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $startingPosition += 8 # Move the starting position forward by 8
 
@@ -547,7 +481,6 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
                 [Array]::Reverse($charArray)            # Reverse the array
                 $resultingDigits += -join $charArray # Join the reversed array back into a string
-                # Write-Output "Char array: $charArray"
 
                 $secondSegment = $decodedHours.Substring(($startingPosition + 8 + $collectionValue1) % 168, $collectionValue2) # Third 8 digits for Sunday
                 $charArray = $secondSegment.ToCharArray() # Convert string to character array
@@ -557,26 +490,21 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
                 $startingPosition += 8 # Move the starting position forward by 8
 
 
-                # Write-Output "Char array: $charArray"
                 # Find the first and last positions of '1'
                 $firstOne = $resultingDigits.IndexOf('1') # Position of the first '1'
                 $lastOne = $resultingDigits.LastIndexOf('1') # Position of the last '1'
 
-                # Write-Output "First '1' Position: $firstOne"
-                # Write-Output "Last '1' Position: $lastOne"
-                # Write-Output "Starting position at end: $startingPosition"
 
                 # Format the allowed time range
-                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq 7 -and $lastOne -eq 17))) {
+                if ($firstOne -ge 0 -and $lastOne -ge 0 -and (-not ($firstOne -eq $startingTime -and $lastOne -eq $endingTime))) {
                     $lastOne = $lastOne + 1 # Adjust lastOne to include the last '1'
                     $allowedTime = "$firstOne AM - $lastOne PM"
-                } elseif ($firstOne -eq 7 -and $lastOne -eq 17) {
+                } elseif ($firstOne -eq $startingTime -and $lastOne -eq $endingTime) {
                     $allowedTime = "Regular Hours"
                 } else {
                     $allowedTime = " - " # No valid time range found
                 }
                 $allowedTime
-                # $resultingDigits
             }
         }} | 
         Sort-Object DisplayName
