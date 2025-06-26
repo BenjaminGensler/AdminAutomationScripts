@@ -449,7 +449,8 @@ $users = Get-ADUser -Filter * -Property DisplayName, Department, UserPrincipalNa
         }}, @{Name="Saturday"; Expression={
             if ($_.logonHours) {
                 $decodedHours = ($_.logonHours | ForEach-Object { [Convert]::ToString($_, 2).PadLeft(8, '0') }) -join ""
-                
+
+                $startingPosition =($startingPosition + $daysOfWeek["Saturday"]) % 168
                 
                 $firstSegment = $decodedHours.Substring($startingPosition, $collectionValue1)
                 $charArray = $firstSegment.ToCharArray() # Convert string to character array
