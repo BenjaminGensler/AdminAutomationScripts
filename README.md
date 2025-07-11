@@ -39,6 +39,15 @@ Please read the instructions in the file `Get-EmployeeLogonHours.ps1` 's comment
 > [!WARNING]
 > Please avoid making changes past the $filter variable as it will likely cause incorrect resulting data.
 
+## Get-AllNetComputerExecutionPolicies
+Queries all computers in Active Directory and then collects the Execution policies of each device. This information is then stored into a .csv file for review at the desired file location (Desktop for default)
+
+### Usage
+ - Must be ran on a device that has access to query Active Directory (like a domain controller)
+
+### Before Use
+Please read the instruction in the file `Get-AllNetComputerExecutionPolicies.ps1` 's comments at the top. These will advise you on line changes to makes and any additional filtering changes that need to be made.
+
 ## Uninstall-Microsoft365Apps
 A PowerShell script to uninstall Microsoft 365 Apps for enterprise and OneNote from Windows devices. Useful for freeing up space on your device from extra language packages that are downloaded onto your computer during the provisioning process.
 
