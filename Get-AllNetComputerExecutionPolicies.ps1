@@ -6,16 +6,20 @@
 # - Active Directory module (or run through a domain controller)
 # - PowerShell remoting enabled on target computers
 
-# Before Using:
+# Before Using:   -------------------------------------------------------------------------------------------------------------------------
 # If necessary please change the $fileSaveLocation on line 12 to your desired file location you would like this .csv file to be created at
 # Define the file save location
 $fileSaveLocation = "$env:USERPROFILE\Desktop"
 
+# Change the filtering below to which ever computers naming conventions you want to include, or exclude
+# Ex:/ $_. Name -like "Laptop*"  (This would apply to all computers with 'laptop' at the beginning such as Laptop1, Laptop2, etc. )
 # Filter for computers
 $filter = {
     $_.Name -like "*" -and 
     $_.Name -notlike ""
 }
+
+# ----------------------------------------------------------------------------------------------------------------------------------------
 
 $computers = Get-ADComputer -Filter * -Property Name | 
     Where-Object $filter | 
