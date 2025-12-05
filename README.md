@@ -26,6 +26,22 @@
 
 # Scripts
 
+## :sparkles: NEW :sparkles: Check-GeneralSecuritySettings
+A universal Powershell script to check the following information on a computer and return any potentially alarming issues such as:
+ - Bitlocker (Returns ERROR or Successful)
+ - Execution Policy Settings (Currently commented out because when run remotely through a manager it always returns ERROR)
+ - Internet Extensions (Chrome and Edge)
+ - Sensitive Files (Recursively Checks Downloads, Desktop, and Documents folder locations for generally sensitive keywords)
+
+### Usage
+ - Can be run either through the computer directly (if so then uncomment the executionpolicy) or through a manager
+ - Must be run in powershell as an administrator to check all given locations
+
+### Before Use
+ - Pull the file called `Check-GeneralSecuritySettings.ps1` and uncomment the execution policy section if desired to allow for viewing of current devices Execution Policy
+ - Add any additional locations to look at that aren't within the Downloads, Desktop or Documents Folders (These are recursively checked so all folders that exist inside of each folder will be looked through)
+ - Add any addition sensitive Keywords that may be needed to check for
+
 ## Get-EmployeeLogonHours
 A universal Powershell script to collect all AD users allowed logonhours and convert them into a readable .CSV format for Saturday - Sunday. (Filtering allowed based on instructional changes and self made change)
 
